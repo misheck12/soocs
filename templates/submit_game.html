@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Submit Game Results</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Submit Game Results</h1>
+        <form method="POST" action="/submit-game">
+            <div class="form-group">
+                <label for="fixture-id">Fixture:</label>
+                <select id="fixture-id" name="fixture_id" required>
+                    {% for fixture in fixtures %}
+                    <option value="{{ fixture._id }}">{{ fixture.HomeTeamID }} vs {{ fixture.AwayTeamID }} on {{ fixture.MatchDate }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="home-score">Home Team Score:</label>
+                <input type="number" id="home-score" name="home_score" required>
+            </div>
+            <div class="form-group">
+                <label for="away-score">Away Team Score:</label>
+                <input type="number" id="away-score" name="away_score" required>
+            </div>
+            <button type="submit">Submit Results</button>
+        </form>
+    </div>
+</body>
+</html>

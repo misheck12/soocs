@@ -1,0 +1,29 @@
+<!-- templates/approved_fixtures.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Approved Fixtures</h1>
+    {% if fixtures %}
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Home Team</th>
+                <th>Away Team</th>
+                <th>Match Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fixture in fixtures %}
+            <tr>
+                <td>{{ fixture.home_team_name }}</td>
+                <td>{{ fixture.away_team_name }}</td>
+                <td>{{ fixture.match_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No approved fixtures at this time.</p>
+    {% endif %}
+</div>
+{% endblock %}

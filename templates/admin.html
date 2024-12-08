@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <h1>Admin Dashboard</h1>
+
+  <section>
+    <h2>Add Team</h2>
+    <form id="add-team-form">
+      <div>
+        <label for="team-name">Team Name:</label>
+        <input type="text" id="team-name" name="team_name" required>
+      </div>
+      <div>
+        <label for="team-logo">Team Logo URL:</label>
+        <input type="url" id="team-logo" name="team_logo" required>
+      </div>
+      <button type="submit">Add Team</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Generate Fixtures</h2>
+    <button id="generate-fixtures-button">Generate Fixtures</button>
+  </section>
+
+  <section>
+    <h2>Create Fixture</h2>
+    <form id="create-fixture-form">
+      <div>
+        <label for="home-team">Home Team:</label>
+        <select id="home-team" name="home_team_id" required>
+          {% for team in teams %}
+            <option value="{{ team.team_id }}">{{ team.team_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="away-team">Away Team:</label>
+        <select id="away-team" name="away_team_id" required>
+          {% for team in teams %}
+            <option value="{{ team.team_id }}">{{ team.team_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="match-date">Match Date:</label>
+        <input type="date" id="match-date" name="match_date" required>
+      </div>
+      <button type="submit">Create Fixture</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Submit Game Results</h2>
+    <form id="submit-game-form">
+      <div>
+        <label for="fixture">Fixture:</label>
+        <select id="fixture" name="fixture_id" required>
+          {% for fixture in fixtures %}
+            <option value="{{ fixture.fixture_id }}">{{ fixture.home_team_name }} vs {{ fixture.away_team_name }} ({{ fixture.match_date }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="home-score">Home Score:</label>
+        <input type="number" id="home-score" name="home_score" required>
+      </div>
+      <div>
+        <label for="away-score">Away Score:</label>
+        <input type="number" id="away-score" name="away_score" required>
+      </div>
+      <button type="submit">Submit Result</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Fixtures</h2>
+    <table id="fixtures-table">
+      <thead>
+        <tr>
+          <th>Home Team</th>
+          <th>Away Team</th>
+          <th>Match Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fixture in fixtures %}
+          <tr>
+            <td>{{ fixture.home_team_name }}</td>
+            <td>{{ fixture.away_team_name }}</td>
+            <td>{{ fixture.match_date }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Pending Fixtures</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Home Team</th>
+          <th>Away Team</th>
+          <th>Match Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fixture in pending_fixtures %} 
+          <tr>
+            <td>{{ fixture.home_team_name }}</td>
+            <td>{{ fixture.away_team_name }}</td>
+            <td>{{ fixture.match_date }}</td>
+            <td>
+              <button class="approve-fixture" data-fixture-id="{{ fixture.fixture_id }}">Approve</button>
+              <button class="reject-fixture" data-fixture-id="{{ fixture.fixture_id }}">Reject</button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <a href="/logout">Logout</a>
+</div>
+
+<script>
+  // Function to fetch and update fixtures table
+  function loadFixtures() {
+    fetch('/fixtures')
+      .then(response => response.json())
+      .then(data => {
+        const tableBody = document.getElementById('fixtures-table').querySelector('tbody');
+        tableBody.innerHTML = ''; 
+        data.fixtures.forEach(fixture => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${fixture.home_team_name}</td>
+            <td>${fixture.away_team_name}</td>
+            <td>${fixture.match_date}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      });
+  }
+
+  // Add Team Form Submission
+  document.getElementById('add-team-form').addEventListener('submit', function(event) {
+    event.preventDefault(); 
+    fetch('/add-team', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        team_name: document.getElementById('team-name').value,
+        team_logo: document.getElementById('team-logo').value
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      alert(data.message); 
+      // Optionally update team select elements in forms
+    }); 
+  });
+
+  // Generate Fixtures Button Click
+  document.getElementById('generate-fixtures-button').addEventListener('click', function() {
+    fetch('/generate-fixtures', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        alert(data.message);
+        loadFixtures(); 
+      });
+  });
+
+  // Create Fixture Form Submission
+  document.getElementById('create-fixture-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    fetch('/create-fixture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        home_team_id: document.getElementById('home-team').value,
+        away_team_id: document.getElementById('away-team').value,
+        match_date: document.getElementById('match-date').value
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      alert(data.message);
+      loadFixtures();
+    });
+  });
+
+  // Submit Game Results Form Submission
+  document.getElementById('submit-game-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    fetch('/submit-game', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fixture_id: document.getElementById('fixture').value,
+        home_score: document.getElementById('home-score').value,
+        away_score: document.getElementById('away-score').value
+      })
+    })
+    .then(response => response.json())
+    .then(data => alert(data.message));
+  });
+
+  // Approve Fixture Button Click
+  document.querySelectorAll('.approve-fixture').forEach(button => {
+    button.addEventListener('click', function() {
+      const fixtureId = this.dataset.fixtureId;
+      fetch(`/approve_game/${fixtureId}`, { method: 'POST' }) 
+        .then(response => response.json())
+        .then(data => alert(data.message));
+    });
+  });
+
+  // Reject Fixture Button Click
+  document.querySelectorAll('.reject-fixture').forEach(button => {
+    button.addEventListener('click', function() {
+      const fixtureId = this.dataset.fixtureId;
+      const rejectionReason = prompt("Please enter the reason for rejection:"); 
+      if (rejectionReason) {
+        fetch(`/reject_game/${fixtureId}`, { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rejection_reason: rejectionReason })
+        })
+        .then(response => response.json())
+        .then(data => alert(data.message));
+      }
+    });
+  });
+
+  // Load fixtures on page load
+  loadFixtures();
+</script>
+{% endblock %}

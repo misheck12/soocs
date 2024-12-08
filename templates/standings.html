@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>League Standings</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Position</th>
+            <th>Logo</th>
+            <th>Team</th>
+            <th>Pl</th>
+            <th>W</th>
+            <th>D</th>
+            <th>L</th>
+            <th>F</th>
+            <th>A</th>
+            <th>GD</th>
+            <th>Pts</th>
+        </tr>
+    </thead>
+    <tbody id="standings-table-body">
+        <!-- Standings will be dynamically populated here -->
+    </tbody>
+</table>
+
+<script>
+    function loadStandings() {
+        fetch('/standings')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('standings-table-body');
+                tableBody.innerHTML = '';  // Clear any existing content
+                data.standings.forEach(team => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${team.Position}</td>
+                        <td><img src="${team.TeamLogo}" alt="${team.TeamName} Logo" width="50"></td>
+                        <td>${team.TeamName}</td>
+                        <td>${team.MatchesPlayed}</td>
+                        <td>${team.Wins}</td>
+                        <td>${team.Draws}</td>
+                        <td>${team.Losses}</td>
+                        <td>${team.GoalsFor}</td>
+                        <td>${team.GoalsAgainst}</td>
+                        <td>${team.GoalDifference}</td>
+                        <td>${team.Points}</td>
+                    `;
+                    tableBody.appendChild(row);  // Add the new row to the table body
+                });
+            })
+            .catch(error => console.error('Error:', error));  // Log any errors
+    }
+
+    // Load standings on page load
+    window.onload = loadStandings;
+</script>
+{% endblock %}

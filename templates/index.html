@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Welcome to the Football League App</h1>
+    
+    <!-- Introduction Section -->
+    <section class="intro">
+        <p>Your one-stop destination for all football league updates. Track your favorite teams, check out the latest match results, and stay informed about upcoming fixtures.</p>
+    </section>
+    
+    <!-- Highlights Section -->
+    <section class="highlights">
+        <h2>Highlights</h2>
+        <div class="highlight">
+            <h3>Recent Match Results</h3>
+            <ul id="recent-results">
+                <!-- Recent results will be dynamically populated here -->
+            </ul>
+        </div>
+        <div class="highlight">
+            <h3>Upcoming Fixtures</h3>
+            <ul id="upcoming-fixtures">
+                <!-- Upcoming fixtures will be dynamically populated here -->
+            </ul>
+        </div>
+    </section>
+
+    <!-- Standings Snapshot Section -->
+    <section class="standings-snapshot">
+        <h2>League Standings</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Team</th>
+                    <th>Points</th>
+                </tr>
+            </thead>
+            <tbody id="standings-snapshot">
+                <!-- Standings will be dynamically populated here -->
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Navigation Links -->
+    <section class="navigation">
+        <h2>Quick Links</h2>
+        <ul>
+            <li><a href="/fixtures">View Fixtures</a></li>
+            <li><a href="/standings">View Standings</a></li>
+            <li><a href="/submit-game">Submit Game Results</a></li>
+            <li><a href="/admin">Admin Dashboard</a></li>
+        </ul>
+    </section>
+</div>
+
+<!-- Footer Section -->
+<footer>
+    <p>Contact us: <a href="mailto:info@footballleague.com">info@footballleague.com</a></p>
+    <p>Follow us on:
+        <a href="#">Facebook</a> |
+        <a href="#">Twitter</a> |
+        <a href="#">Instagram</a>
+    </p>
+</footer>
+
+<script>
+    // Fetch and populate recent results
+    function loadRecentResults() {
+        fetch('/fixtures?status=completed')
+            .then(response => response.json())
+            .then(data => {
+                const resultsList = document.getElementById('recent-results');
+                resultsList.innerHTML = '';  // Clear any existing content
+                data.fixtures.slice(0, 5).forEach(fixture => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${fixture.HomeTeamName} ${fixture.HomeScore} - ${fixture.AwayScore} ${fixture.AwayTeamName}`;
+                    resultsList.appendChild(listItem);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Fetch and populate upcoming fixtures
+    function loadUpcomingFixtures() {
+        fetch('/fixtures?status=scheduled')
+            .then(response => response.json())
+            .then(data => {
+                const fixturesList = document.getElementById('upcoming-fixtures');
+                fixturesList.innerHTML = '';  // Clear any existing content
+                data.fixtures.slice(0, 5).forEach(fixture => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${fixture.HomeTeamName} vs ${fixture.AwayTeamName} - ${fixture.MatchDate}`;
+                    fixturesList.appendChild(listItem);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Fetch and populate standings
+    function loadStandings() {
+    fetch('/standings')
+        .then(response => response.json())
+        .then(data => {
+            const standingsTable = document.getElementById('standings-snapshot');
+            standingsTable.innerHTML = ''; // Clear any existing content
+            
+            data.standings.forEach(team => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <img src="${team.TeamLogo || 'default-logo.png'}" 
+                             alt="${team.TeamName || 'Team'} Logo" 
+                             width="50">
+                    </td>
+                    <td>${team.TeamName || 'N/A'}</td>
+                    <td>${team.MatchesPlayed || 0}</td>
+                    <td>${team.Wins || 0}</td>
+                    <td>${team.Draws || 0}</td>
+                    <td>${team.Losses || 0}</td>
+                    <td>${team.GoalsFor || 0}</td>
+                    <td>${team.GoalsAgainst || 0}</td>
+                    <td>${team.GoalDifference || 0}</td>
+                    <td>${team.Points || 0}</td>
+                `;
+                standingsTable.appendChild(row);
+            });
+        })
+        .catch(error => console.error('Error fetching standings:', error));
+}
+
+
+    // Load all data on page load
+    window.onload = function() {
+        loadRecentResults();
+        loadUpcomingFixtures();
+        loadStandings();
+    }
+</script>
+{% endblock %}

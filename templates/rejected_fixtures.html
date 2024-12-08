@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Rejected Fixtures</h1>
+    {% if fixtures %}
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Home Team</th>
+                <th>Away Team</th>
+                <th>Match Date</th>
+                <th>Reason</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fixture in fixtures %}
+            <tr>
+                <td>{{ fixture.home_team_name }}</td>
+                <td>{{ fixture.away_team_name }}</td>
+                <td>{{ fixture.match_date }}</td>
+                <td>{{ fixture.rejection_reason }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No rejected fixtures at this time.</p>
+    {% endif %}
+</div>
+{% endblock %}
