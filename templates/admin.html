@@ -1,242 +1,797 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="container">
-  <h1>Admin Dashboard</h1>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <h3 class="text-center">Admin Panel</h3>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+                            Dashboard Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#teams" data-bs-toggle="tab">
+                            Teams
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#fixtures" data-bs-toggle="tab">
+                            Fixtures
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#results" data-bs-toggle="tab">
+                            Results
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#users" data-bs-toggle="tab">
+                            User Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#standings" data-bs-toggle="tab">
+                            Standings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#reports" data-bs-toggle="tab">
+                            Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#settings" data-bs-toggle="tab">
+                            Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
 
-  <section>
-    <h2>Add Team</h2>
-    <form id="add-team-form">
-      <div>
-        <label for="team-name">Team Name:</label>
-        <input type="text" id="team-name" name="team_name" required>
-      </div>
-      <div>
-        <label for="team-logo">Team Logo URL:</label>
-        <input type="url" id="team-logo" name="team_logo" required>
-      </div>
-      <button type="submit">Add Team</button>
-    </form>
-  </section>
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <!-- Flashed Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="container mt-3">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
 
-  <section>
-    <h2>Generate Fixtures</h2>
-    <button id="generate-fixtures-button">Generate Fixtures</button>
-  </section>
+            <!-- Tab Content -->
+            <div class="tab-content" id="adminTabContent">
+                <!-- Dashboard Analytics Tab -->
+                <div class="tab-pane fade show active" id="dashboard">
+                    <h2 class="mt-4">Dashboard Analytics</h2>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card text-center mb-4">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total Teams</h5>
+                                    <p class="card-text">{{ analytics.total_teams }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Add more cards for other analytics as needed -->
+                    </div>
+                </div>
 
-  <section>
-    <h2>Create Fixture</h2>
-    <form id="create-fixture-form">
-      <div>
-        <label for="home-team">Home Team:</label>
-        <select id="home-team" name="home_team_id" required>
-          {% for team in teams %}
-            <option value="{{ team.team_id }}">{{ team.team_name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label for="away-team">Away Team:</label>
-        <select id="away-team" name="away_team_id" required>
-          {% for team in teams %}
-            <option value="{{ team.team_id }}">{{ team.team_name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label for="match-date">Match Date:</label>
-        <input type="date" id="match-date" name="match_date" required>
-      </div>
-      <button type="submit">Create Fixture</button>
-    </form>
-  </section>
+                <!-- Teams Management Tab -->
+                <div class="tab-pane fade" id="teams">
+                    <h2 class="mt-4">Manage Teams</h2>
+                    <!-- Add Team Form -->
+                    <form id="add-team-form" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="teamName" class="form-label">Team Name</label>
+                            <input type="text" class="form-control" id="teamName" name="team_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="teamLogo" class="form-label">Team Logo</label>
+                            <input type="file" class="form-control" id="teamLogo" name="team_logo" accept="image/*" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Team</button>
+                    </form>
 
-  <section>
-    <h2>Submit Game Results</h2>
-    <form id="submit-game-form">
-      <div>
-        <label for="fixture">Fixture:</label>
-        <select id="fixture" name="fixture_id" required>
-          {% for fixture in fixtures %}
-            <option value="{{ fixture.fixture_id }}">{{ fixture.home_team_name }} vs {{ fixture.away_team_name }} ({{ fixture.match_date }})</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label for="home-score">Home Score:</label>
-        <input type="number" id="home-score" name="home_score" required>
-      </div>
-      <div>
-        <label for="away-score">Away Score:</label>
-        <input type="number" id="away-score" name="away_score" required>
-      </div>
-      <button type="submit">Submit Result</button>
-    </form>
-  </section>
+                    <!-- Teams Table -->
+                    <h3 class="mt-5">All Teams</h3>
+                    <table class="table table-striped" id="teams-table">
+                        <thead>
+                            <tr>
+                                <th>Logo</th>
+                                <th>Name</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for team in teams %}
+                            <tr>
+                                <td><img src="{{ team.logo_url }}" alt="{{ team.name }} Logo" width="50"></td>
+                                <td>{{ team.name }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="editTeam('{{ team.id }}')">Edit</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteTeam('{{ team.id }}')">Delete</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
-  <section>
-    <h2>Fixtures</h2>
-    <table id="fixtures-table">
-      <thead>
-        <tr>
-          <th>Home Team</th>
-          <th>Away Team</th>
-          <th>Match Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for fixture in fixtures %}
-          <tr>
-            <td>{{ fixture.home_team_name }}</td>
-            <td>{{ fixture.away_team_name }}</td>
-            <td>{{ fixture.match_date }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
+                <!-- Fixtures Management Tab -->
+                <div class="tab-pane fade" id="fixtures">
+                    <h2 class="mt-4">Manage Fixtures</h2>
+                    <!-- Generate Fixtures Button -->
+                    <button class="btn btn-primary mb-3" onclick="generateFixtures()">Generate Fixtures</button>
 
-  <section>
-    <h2>Pending Fixtures</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Home Team</th>
-          <th>Away Team</th>
-          <th>Match Date</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for fixture in pending_fixtures %} 
-          <tr>
-            <td>{{ fixture.home_team_name }}</td>
-            <td>{{ fixture.away_team_name }}</td>
-            <td>{{ fixture.match_date }}</td>
-            <td>
-              <button class="approve-fixture" data-fixture-id="{{ fixture.fixture_id }}">Approve</button>
-              <button class="reject-fixture" data-fixture-id="{{ fixture.fixture_id }}">Reject</button>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
+                    <!-- Create Fixture Form -->
+                    <form id="create-fixture-form" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="homeTeam" class="form-label">Home Team</label>
+                            <select class="form-select" id="homeTeam" name="home_team_id" required>
+                                <option value="" selected disabled>Select Home Team</option>
+                                {% for team in teams %}
+                                <option value="{{ team.id }}">{{ team.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="awayTeam" class="form-label">Away Team</label>
+                            <select class="form-select" id="awayTeam" name="away_team_id" required>
+                                <option value="" selected disabled>Select Away Team</option>
+                                {% for team in teams %}
+                                <option value="{{ team.id }}">{{ team.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="matchDate" class="form-label">Match Date</label>
+                            <input type="date" class="form-control" id="matchDate" name="match_date" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Fixture</button>
+                    </form>
 
-  <a href="/logout">Logout</a>
+                    <!-- Fixtures Table -->
+                    <h3 class="mt-5">All Fixtures</h3>
+                    <table class="table table-striped" id="fixtures-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Home Team</th>
+                                <th>Away Team</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fixture in fixtures %}
+                            <tr>
+                                <td>{{ fixture.match_date }}</td>
+                                <td>{{ fixture.home_team }}</td>
+                                <td>{{ fixture.away_team }}</td>
+                                <td>{{ fixture.status }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="editFixture('{{ fixture.id }}')">Edit</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteFixture('{{ fixture.id }}')">Delete</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Results Management Tab -->
+                <div class="tab-pane fade" id="results">
+                    <h2 class="mt-4">Manage Results</h2>
+                    <!-- Results Table -->
+                    <table class="table table-striped" id="results-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Home Team</th>
+                                <th>Score</th>
+                                <th>Away Team</th>
+                                <th>Submitted By</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                <td>{{ result.match_date }}</td>
+                                <td>{{ result.home_team }}</td>
+                                <td>{{ result.home_score }} - {{ result.away_score }}</td>
+                                <td>{{ result.away_team }}</td>
+                                <td>{{ result.submitted_by }}</td>
+                                <td>{{ result.status }}</td>
+                                <td>
+                                    {% if result.status == 'Pending' %}
+                                    <button class="btn btn-sm btn-success" onclick="approveResult('{{ result.id }}')">Approve</button>
+                                    <button class="btn btn-sm btn-danger" onclick="rejectResult('{{ result.id }}')">Reject</button>
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-info" onclick="editResult('{{ result.id }}')">Edit</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- User Management Tab -->
+                <div class="tab-pane fade" id="users">
+                    <h2 class="mt-4">Admin Users</h2>
+                    <!-- Add Admin User Form -->
+                    <form id="add-user-form" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add User</button>
+                    </form>
+
+                    <!-- Admin Users Table -->
+                    <h3 class="mt-5">All Admin Users</h3>
+                    <table class="table table-striped" id="users-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in admin_users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="editUser('{{ user.id }}')">Edit</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteUser('{{ user.id }}')">Delete</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- League Standings Tab -->
+                <div class="tab-pane fade" id="standings">
+                    <h2 class="mt-4">League Standings</h2>
+                    <!-- Standings Table -->
+                    <table class="table table-striped" id="standings-table">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>Team</th>
+                                <th>Played</th>
+                                <th>Won</th>
+                                <th>Drawn</th>
+                                <th>Lost</th>
+                                <th>GF</th>
+                                <th>GA</th>
+                                <th>GD</th>
+                                <th>Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for standing in standings %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ standing.team_name }}</td>
+                                <td>{{ standing.played }}</td>
+                                <td>{{ standing.won }}</td>
+                                <td>{{ standing.drawn }}</td>
+                                <td>{{ standing.lost }}</td>
+                                <td>{{ standing.goals_for }}</td>
+                                <td>{{ standing.goals_against }}</td>
+                                <td>{{ standing.goal_difference }}</td>
+                                <td>{{ standing.points }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Reports Tab -->
+                <div class="tab-pane fade" id="reports">
+                    <h2 class="mt-4">Generate Reports</h2>
+                    <!-- Report Options -->
+                    <form id="generate-report-form" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="reportType" class="form-label">Select Report Type</label>
+                            <select class="form-select" id="reportType" name="report_type" required>
+                                <option value="" selected disabled>Select Report</option>
+                                <option value="match_statistics">Match Statistics</option>
+                                <option value="team_performance">Team Performance</option>
+                                <option value="league_progress">League Progress</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Generate Report</button>
+                    </form>
+                    <!-- Report Content -->
+                    <div id="report-content" class="mt-5">
+                        <!-- Generated report will be displayed here -->
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div class="tab-pane fade" id="settings">
+                    <h2 class="mt-4">System Settings</h2>
+                    <!-- Change Password Form -->
+                    <form id="change-password-form" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="currentPassword" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="currentPassword" name="current_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="newPassword" name="new_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                    </form>
+
+                    <!-- System Settings Form -->
+                    <h3 class="mt-5">Configure System Settings</h3>
+                    <form id="system-settings-form" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="leagueName" class="form-label">League Name</label>
+                            <input type="text" class="form-control" id="leagueName" name="league_name" value="{{ settings.league_name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="seasonStartDate" class="form-label">Season Start Date</label>
+                            <input type="date" class="form-control" id="seasonStartDate" name="season_start_date" value="{{ settings.season_start_date }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Settings</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
 </div>
 
+<!-- Modals for Editing Entities -->
+<!-- Edit Team Modal -->
+<div class="modal fade" id="editTeamModal" tabindex="-1" aria-labelledby="editTeamModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="edit-team-form" method="POST" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTeamModalLabel">Edit Team</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="team_id" id="editTeamId">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="editTeamName" class="form-label">Team Name</label>
+                        <input type="text" class="form-control" id="editTeamName" name="team_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTeamLogo" class="form-label">Team Logo</label>
+                        <input type="file" class="form-control" id="editTeamLogo" name="team_logo" accept="image/*">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Update Team</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Include Bootstrap JS and Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Custom JavaScript for Interactivity -->
 <script>
-  // Function to fetch and update fixtures table
-  function loadFixtures() {
-    fetch('/fixtures')
-      .then(response => response.json())
-      .then(data => {
-        const tableBody = document.getElementById('fixtures-table').querySelector('tbody');
-        tableBody.innerHTML = ''; 
-        data.fixtures.forEach(fixture => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${fixture.home_team_name}</td>
-            <td>${fixture.away_team_name}</td>
-            <td>${fixture.match_date}</td>
-          `;
-          tableBody.appendChild(row);
+    document.addEventListener('DOMContentLoaded', function() {
+        // CSRF Token
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+    
+        // Handle Add Team Form Submission
+        document.getElementById('add-team-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            const formData = new FormData(this);
+    
+            fetch('/add_team', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Team added successfully.');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to add team.');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding team:', error);
+                alert('An error occurred while adding the team.');
+            });
         });
-      });
-  }
+    
+        // Handle Edit Team
+        window.editTeam = function(teamId) {
+            fetch(`/get_team/${teamId}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(team => {
+                document.getElementById('editTeamId').value = teamId;
+                document.getElementById('editTeamName').value = team.name;
+                // Handle logo if needed
+                const editTeamModal = new bootstrap.Modal(document.getElementById('editTeamModal'));
+                editTeamModal.show();
+            })
+            .catch(error => {
+                console.error('Error fetching team data:', error);
+                alert('Failed to fetch team data.');
+            });
+        };
+    
+        // Handle Edit Team Form Submission
+        document.getElementById('edit-team-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            const teamId = document.getElementById('editTeamId').value;
+            const formData = new FormData(this);
+    
+            fetch(`/edit_team/${teamId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Team updated successfully.');
+                    const editTeamModal = bootstrap.Modal.getInstance(document.getElementById('editTeamModal'));
+                    editTeamModal.hide();
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to update team.');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating team:', error);
+                alert('An error occurred while updating the team.');
+            });
+        });
+    
+        // Handle Delete Team
+        window.deleteTeam = function(teamId) {
+            if (confirm('Are you sure you want to delete this team?')) {
+                fetch(`/delete_team/${teamId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Team deleted successfully.');
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Failed to delete team.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting team:', error);
+                    alert('An error occurred while deleting the team.');
+                });
+            }
+        };
+    
+        // Similar event handlers for fixtures, results, users, reports, and settings
+    
+        // Example: Handle Add Fixture Form Submission
+        document.getElementById('create-fixture-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            const formData = new FormData(this);
+    
+            fetch('/create_fixture', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    home_team_id: document.getElementById('homeTeam').value,
+                    away_team_id: document.getElementById('awayTeam').value,
+                    match_date: document.getElementById('matchDate').value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Fixture created successfully.');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to create fixture.');
+                }
+            })
+            .catch(error => {
+                console.error('Error creating fixture:', error);
+                alert('An error occurred while creating the fixture.');
+            });
+        });
+    
+        // Handle Delete Fixture
+        window.deleteFixture = function(fixtureId) {
+            if (confirm('Are you sure you want to delete this fixture?')) {
+                fetch(`/delete_fixture/${fixtureId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Fixture deleted successfully.');
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Failed to delete fixture.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting fixture:', error);
+                    alert('An error occurred while deleting the fixture.');
+                });
+            }
+        };
+    
+        // Handle Approve Result
+        window.approveResult = function(resultId) {
+            if (confirm('Are you sure you want to approve this result?')) {
+                fetch(`/approve_result/${resultId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Result approved successfully.');
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Failed to approve result.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error approving result:', error);
+                    alert('An error occurred while approving the result.');
+                });
+            }
+        };
+    
+        // Handle Reject Result
+        window.rejectResult = function(resultId) {
+            if (confirm('Are you sure you want to reject this result?')) {
+                fetch(`/reject_result/${resultId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Result rejected successfully.');
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Failed to reject result.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error rejecting result:', error);
+                    alert('An error occurred while rejecting the result.');
+                });
+            }
+        };
+    
+        // Handle Add User Form Submission
+        document.getElementById('add-user-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            const formData = new FormData(this);
+    
+            fetch('/add_user', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('User added successfully.');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to add user.');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding user:', error);
+                alert('An error occurred while adding the user.');
+            });
+        });
+    
+        // Handle Delete User
+        window.deleteUser = function(userId) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                fetch(`/delete_user/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('User deleted successfully.');
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Failed to delete user.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting user:', error);
+                    alert('An error occurred while deleting the user.');
+                });
+            }
+        };
+    
+        // Handle Change Password Form Submission
+        document.getElementById('change-password-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            const formData = new FormData(this);
+    
+            fetch('/change_password', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Password changed successfully.');
+                    this.reset();
+                } else {
+                    alert(data.message || 'Failed to change password.');
+                }
+            })
+            .catch(error => {
+                console.error('Error changing password:', error);
+                alert('An error occurred while changing the password.');
+            });
+        });
+    
+        // Handle Update System Settings Form Submission
+        document.getElementById('system-settings-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            const formData = new FormData(this);
+    
+            fetch('/update_settings', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Settings updated successfully.');
+                } else {
+                    alert(data.message || 'Failed to update settings.');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating settings:', error);
+                alert('An error occurred while updating settings.');
+            });
+        });
+    
+        // Handle Generate Reports Form Submission
+        document.getElementById('generate-report-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+    
+            const reportType = document.getElementById('reportType').value;
+    
+            fetch(`/generate_report`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ report_type: reportType })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Display report in #report-content
+                    document.getElementById('report-content').innerHTML = data.report_html;
+                } else {
+                    alert(data.message || 'Failed to generate report.');
+                }
+            })
+            .catch(error => {
+                console.error('Error generating report:', error);
+                alert('An error occurred while generating the report.');
+            });
+        });
 
-  // Add Team Form Submission
-  document.getElementById('add-team-form').addEventListener('submit', function(event) {
-    event.preventDefault(); 
-    fetch('/add-team', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        team_name: document.getElementById('team-name').value,
-        team_logo: document.getElementById('team-logo').value
-      })
+        document.getElementById('generate-report-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const reportType = document.getElementById('reportType').value;
+
+    fetch('/generate_report', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ report_type: reportType })
     })
     .then(response => response.json())
     .then(data => {
-      alert(data.message); 
-      // Optionally update team select elements in forms
-    }); 
-  });
-
-  // Generate Fixtures Button Click
-  document.getElementById('generate-fixtures-button').addEventListener('click', function() {
-    fetch('/generate-fixtures', { method: 'POST' })
-      .then(response => response.json())
-      .then(data => {
-        alert(data.message);
-        loadFixtures(); 
-      });
-  });
-
-  // Create Fixture Form Submission
-  document.getElementById('create-fixture-form').addEventListener('submit', function(event) {
-    event.preventDefault();
-    fetch('/create-fixture', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        home_team_id: document.getElementById('home-team').value,
-        away_team_id: document.getElementById('away-team').value,
-        match_date: document.getElementById('match-date').value
-      })
+        if (data.success) {
+            // Display report in #report-content
+            document.getElementById('report-content').innerHTML = data.report_html;
+        } else {
+            alert(data.message || 'Failed to generate report.');
+        }
     })
-    .then(response => response.json())
-    .then(data => {
-      alert(data.message);
-      loadFixtures();
+    .catch(error => {
+        console.error('Error generating report:', error);
+        alert('An error occurred while generating the report.');
     });
-  });
-
-  // Submit Game Results Form Submission
-  document.getElementById('submit-game-form').addEventListener('submit', function(event) {
-    event.preventDefault();
-    fetch('/submit-game', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fixture_id: document.getElementById('fixture').value,
-        home_score: document.getElementById('home-score').value,
-        away_score: document.getElementById('away-score').value
-      })
-    })
-    .then(response => response.json())
-    .then(data => alert(data.message));
-  });
-
-  // Approve Fixture Button Click
-  document.querySelectorAll('.approve-fixture').forEach(button => {
-    button.addEventListener('click', function() {
-      const fixtureId = this.dataset.fixtureId;
-      fetch(`/approve_game/${fixtureId}`, { method: 'POST' }) 
-        .then(response => response.json())
-        .then(data => alert(data.message));
+});
+    
+        // Additional event handlers can be added as needed
     });
-  });
-
-  // Reject Fixture Button Click
-  document.querySelectorAll('.reject-fixture').forEach(button => {
-    button.addEventListener('click', function() {
-      const fixtureId = this.dataset.fixtureId;
-      const rejectionReason = prompt("Please enter the reason for rejection:"); 
-      if (rejectionReason) {
-        fetch(`/reject_game/${fixtureId}`, { 
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rejection_reason: rejectionReason })
-        })
-        .then(response => response.json())
-        .then(data => alert(data.message));
-      }
-    });
-  });
-
-  // Load fixtures on page load
-  loadFixtures();
-</script>
+    </script>
 {% endblock %}

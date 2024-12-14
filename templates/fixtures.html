@@ -2,68 +2,109 @@
 {% block content %}
 <div class="container">
     <h1>Match Fixtures</h1>
-    <!-- Filter Form -->
-    <form id="filter-form">
-        <label for="status">Status:</label>
-        <select id="status" name="status">
-            <option value="">All</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="completed">Completed</option>
-        </select>
-        <label for="from-date">From Date:</label>
-        <input type="date" id="from-date" name="from_date">
-        <label for="to-date">To Date:</label>
-        <input type="date" id="to-date" name="to_date">
-        <label for="team-id">Team ID:</label>
-        <input type="text" id="team-id" name="team_id" placeholder="Enter Team ID">
-        <button type="submit">Filter</button>
-    </form>
+    
     <!-- Fixtures Table -->
-    <table id="fixtures-table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Home Team</th>
-                <th>Away Team</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Fixtures will be injected here -->
-        </tbody>
-    </table>
+    <section class="fixtures-section">
+        <h2>Upcoming Fixtures</h2>
+        <table id="upcoming-fixtures-table">
+            <thead>
+                <tr>
+                    <th>Home Team</th>
+                    <th>Away Team</th>
+                    <th>Match Date</th>
+                    <th>Submit Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Upcoming fixtures will be dynamically populated here -->
+            </tbody>
+        </table>
+    </section>
+
+    <section class="fixtures-section">
+        <h2>Completed Fixtures</h2>
+        <table id="completed-fixtures-table">
+            <thead>
+                <tr>
+                    <th>Home Team</th>
+                    <th>Away Team</th>
+                    <th>Home Score</th>
+                    <th>Away Score</th>
+                    <th>Match Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Completed fixtures will be dynamically populated here -->
+            </tbody>
+        </table>
+    </section>
 </div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('filter-form');
-        const tableBody = document.querySelector('#fixtures-table tbody');
+        loadFixtures('scheduled', 'upcoming-fixtures-table');
+        loadFixtures('completed', 'completed-fixtures-table');
+    });
 
-        function loadFixtures() {
-            const params = new URLSearchParams(new FormData(form)).toString();
-            fetch(`/fixtures?${params}`)
-                .then(response => response.json())
-                .then(data => {
-                    tableBody.innerHTML = '';
-                    data.fixtures.forEach(fixture => {
-                        const row = document.createElement('tr');
+    function loadFixtures(status, tableId) {
+        fetch(`/fixtures?status=${status}`)
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById(tableId).querySelector('tbody');
+                tableBody.innerHTML = '';
+                data.fixtures.forEach(fixture => {
+                    const row = document.createElement('tr');
+                    if (status === 'completed') {
                         row.innerHTML = `
-                            <td>${fixture.match_date}</td>
                             <td>${fixture.home_team_name}</td>
                             <td>${fixture.away_team_name}</td>
-                            <td>${fixture.status}</td>
+                            <td>${fixture.home_score}</td>
+                            <td>${fixture.away_score}</td>
+                            <td>${fixture.match_date}</td>
                         `;
-                        tableBody.appendChild(row);
+                    } else {
+                        row.innerHTML = `
+                            <td>${fixture.home_team_name}</td>
+                            <td>${fixture.away_team_name}</td>
+                            <td>${fixture.match_date}</td>
+                            <td>
+                                <form class="submit-result-form">
+                                    <input type="hidden" name="fixture_id" value="${fixture._id}">
+                                    <input type="number" name="home_score" placeholder="Home Score" required>
+                                    <input type="number" name="away_score" placeholder="Away Score" required>
+                                    <button type="submit">Submit Result</button>
+                                </form>
+                            </td>
+                        `;
+                    }
+                    tableBody.appendChild(row);
+                });
+
+                // Add event listeners to the newly created forms
+                document.querySelectorAll('.submit-result-form').forEach(form => {
+                    form.addEventListener('submit', function(event) {
+                        event.preventDefault();
+                        submitResult(new FormData(form));
                     });
                 });
-        }
+            })
+            .catch(error => console.error('Error:', error));
+    }
 
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-            loadFixtures();
-        });
-
-        // Load fixtures on page load
-        loadFixtures();
-    });
+    function submitResult(formData) {
+        fetch('/submit-game', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            loadFixtures('scheduled', 'upcoming-fixtures-table');  // Refresh the fixtures table
+        })
+        .catch(error => console.error('Error:', error));
+    }
 </script>
 {% endblock %}

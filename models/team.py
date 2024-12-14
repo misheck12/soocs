@@ -1,7 +1,19 @@
 class Team:
-    def __init__(self, name, logo, points=0, matches_played=0, wins=0, draws=0, losses=0, goals_for=0, goals_against=0, goal_diff=0):
+    def __init__(
+        self,
+        name,
+        logo_url,
+        points=0,
+        matches_played=0,
+        wins=0,
+        draws=0,
+        losses=0,
+        goals_for=0,
+        goals_against=0,
+        goal_diff=0
+    ):
         self.name = name
-        self.logo = logo
+        self.logo_url = logo_url
         self.points = points
         self.matches_played = matches_played
         self.wins = wins
@@ -17,7 +29,7 @@ class Team:
         self.goals_for += goals_for
         self.goals_against += goals_against
         self.goal_diff = self.goals_for - self.goals_against
-        
+
         if goals_for > goals_against:  # Win
             self.wins += 1
             self.points += 3
@@ -31,7 +43,7 @@ class Team:
         """Convert team object to dictionary format."""
         return {
             'name': self.name,
-            'logo': self.logo,
+            'logo_url': self.logo_url,
             'points': self.points,
             'matches_played': self.matches_played,
             'wins': self.wins,
